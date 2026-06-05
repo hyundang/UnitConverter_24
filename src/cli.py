@@ -6,8 +6,9 @@ import sys
 from pathlib import Path
 
 from application.formatting.output import format_csv, format_table
-from application.parsing import FormatError
+from application.parsing import FormatError, NumberError
 from application.use_cases import process_stdin_lines
+from domain.validation import UnknownUnitError
 from infrastructure.config_loader import load_registry
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -30,7 +31,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         processed = process_stdin_lines(registry, lines)
-    except FormatError as exc:
+    except (FormatError, NumberError, UnknownUnitError) as exc:
         print(exc, file=sys.stderr)
         return 1
 
