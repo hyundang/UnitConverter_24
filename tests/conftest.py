@@ -85,6 +85,23 @@ def run_cli(cli_command):
     return _run
 
 
+def assert_default_table_output(result, expected_conversion_values, supported_units):
+    assert result.returncode == 0, result.stderr
+
+    lines = [line for line in result.stdout.strip().splitlines() if line.strip()]
+    assert len(lines) == 3
+
+    for unit in supported_units:
+        matching = [line for line in lines if line.rstrip().endswith(unit)]
+        assert len(matching) == 1
+        assert "meter" in matching[0]
+        assert "=" in matching[0]
+
+    assert f"{expected_conversion_values['feet']:.4f}" in result.stdout
+    assert f"{expected_conversion_values['yard']:.4f}" in result.stdout
+    assert f"{expected_conversion_values['meter']:.1f}" in result.stdout
+
+
 @pytest.fixture
 def units_config_path():
     return REPO_ROOT / "config" / "units.json"

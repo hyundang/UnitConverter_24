@@ -6,14 +6,8 @@ import sys
 from pathlib import Path
 
 from application.formatting.output import format_csv, format_table
-from application.parsing import (
-    REGISTER_EQUALS,
-    FormatError,
-    parse_unit_value,
-)
-from application.use_cases import register_unit_from_string
-from domain.conversion import convert_all
-from domain.validation import validate_unit
+from application.parsing import FormatError
+from application.use_cases import process_stdin_lines
 from infrastructure.config_loader import load_registry
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -34,26 +28,16 @@ def main(argv: list[str] | None = None) -> int:
     registry = load_registry(UNITS_CONFIG_PATH)
     lines = [line.strip() for line in sys.stdin.read().splitlines() if line.strip()]
 
-    unit: str | None = None
-    value: float | None = None
-    results: dict[str, float] | None = None
-
-    for line in lines:
-        if REGISTER_EQUALS in line:
-            register_unit_from_string(registry, line)
-            continue
-
-        try:
-            unit, value = parse_unit_value(line)
-        except FormatError as exc:
-            print(exc, file=sys.stderr)
-            return 1
-
-        validate_unit(unit, registry)
-        results = convert_all(value, unit, registry)
-
-    if results is None or unit is None or value is None:
+    try:
+        processed = process_stdin_lines(registry, lines)
+    except FormatError as exc:
+        print(exc, file=sys.stderr)
         return 1
+
+    if processed is None:
+        return 1
+
+    unit, value, results = processed
 
     if args.format == FORMAT_JSON:
         print(json.dumps(results))
