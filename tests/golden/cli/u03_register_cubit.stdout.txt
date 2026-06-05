@@ -1,0 +1,4 @@
+2.0 cubit = 0.9144 meter
+2.0 cubit = 3.0000 feet
+2.0 cubit = 1.0000 yard
+2.0 cubit = 2.0000 cubit

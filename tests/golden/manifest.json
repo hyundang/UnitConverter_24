@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "description": "REFACTOR baseline — regenerate with scripts/capture_golden_masters.py",
+  "scenarios": [
+    {
+      "name": "table_meter_2_5",
+      "kind": "cli",
+      "args": [],
+      "stdin": "meter:2.5\n",
+      "returncode": 0,
+      "stdout": "cli/table_meter_2_5.stdout.txt",
+      "stderr": "cli/table_meter_2_5.stderr.txt",
+      "rc": "cli/table_meter_2_5.rc"
+    },
+    {
+      "name": "json_meter_2_5",
+      "kind": "cli",
+      "args": [
+        "--format",
+        "json"
+      ],
+      "stdin": "meter:2.5\n",
+      "returncode": 0,
+      "stdout": "cli/json_meter_2_5.stdout.txt",
+      "stderr": "cli/json_meter_2_5.stderr.txt",
+      "rc": "cli/json_meter_2_5.rc"
+    },
+    {
+      "name": "csv_meter_2_5",
+      "kind": "cli",
+      "args": [
+        "--format",
+        "csv"
+      ],
+      "stdin": "meter:2.5\n",
+      "returncode": 0,
+      "stdout": "cli/csv_meter_2_5.stdout.txt",
+      "stderr": "cli/csv_meter_2_5.stderr.txt",
+      "rc": "cli/csv_meter_2_5.rc"
+    },
+    {
+      "name": "u02_invalid_format",
+      "kind": "cli",
+      "args": [],
+      "stdin": "meter\n",
+      "returncode": 1,
+      "stdout": "cli/u02_invalid_format.stdout.txt",
+      "stderr": "cli/u02_invalid_format.stderr.txt",
+      "rc": "cli/u02_invalid_format.rc"
+    },
+    {
+      "name": "u03_register_cubit",
+      "kind": "cli",
+      "args": [],
+      "stdin": "1 cubit = 0.4572 meter\ncubit:2\n",
+      "returncode": 0,
+      "stdout": "cli/u03_register_cubit.stdout.txt",
+      "stderr": "cli/u03_register_cubit.stderr.txt",
+      "rc": "cli/u03_register_cubit.rc"
+    },
+    {
+      "name": "meter_2_5_conversions",
+      "kind": "domain",
+      "input_unit": "meter",
+      "input_value": 2.5,
+      "output": "domain/meter_2_5_conversions.json"
+    },
+    {
+      "name": "format_invalid_meter",
+      "kind": "error_message",
+      "exception": "FormatError",
+      "message": "errors/format_invalid_meter.txt"
+    },
+    {
+      "name": "number_invalid_abc",
+      "kind": "error_message",
+      "exception": "NumberError",
+      "message": "errors/number_invalid_abc.txt"
+    },
+    {
+      "name": "unknown_unit_inch",
+      "kind": "error_message",
+      "exception": "UnknownUnitError",
+      "message": "errors/unknown_unit_inch.txt"
+    }
+  ]
+}
