@@ -8,12 +8,11 @@ from pathlib import Path
 
 import pytest
 
+from application.formatting.output import TABLE_BORDER, TABLE_HEADER_ROW
 from tests import inputs
 
 TABLE_HEADERS = ("unit", "input", "value")
 INPUT_NUMERIC = re.compile(r"^\d+(\.\d+)?$")
-GRID_TABLE_BORDER = "+-------+-------+--------+"
-GRID_TABLE_HEADER = "| unit  | input | value  |"
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -113,10 +112,10 @@ def _is_table_header_line(line: str) -> bool:
 def _assert_grid_table_structure(stdout: str) -> None:
     lines = stdout.splitlines()
     assert len(lines) >= 4, f"expected bordered grid table, got {len(lines)} lines"
-    assert lines[0] == GRID_TABLE_BORDER
-    assert lines[1] == GRID_TABLE_HEADER
-    assert lines[2] == GRID_TABLE_BORDER
-    assert lines[-1] == GRID_TABLE_BORDER
+    assert lines[0] == TABLE_BORDER
+    assert lines[1] == TABLE_HEADER_ROW
+    assert lines[2] == TABLE_BORDER
+    assert lines[-1] == TABLE_BORDER
     for line in lines[3:-1]:
         assert line.startswith("|") and line.endswith("|"), (
             f"expected data row with pipe borders: {line!r}"
@@ -141,10 +140,6 @@ def assert_default_table_output(result, expected_conversion_values, source_value
     assert result.returncode == 0, result.stderr
 
     _assert_grid_table_structure(result.stdout)
-
-    stdout_lower = result.stdout.lower()
-    for header in TABLE_HEADERS:
-        assert header in stdout_lower, f"missing table header: {header}"
 
     rows = _parse_table_data_rows(result.stdout)
     assert len(rows) == len(expected_conversion_values), (

@@ -1,11 +1,10 @@
 """CLI entry point. Run from repo root: python src/cli.py"""
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
-from application.formatting.output import format_csv, format_table
+from application.formatting.output import format_csv, format_json, format_table
 from application.parsing import FormatError, NumberError
 from application.use_cases import process_stdin_lines
 from domain.validation import UnknownUnitError
@@ -23,7 +22,7 @@ def _render_output(
 ) -> tuple[str, bool]:
     """Return rendered stdout and whether print should use end=''."""
     if output_format == FORMAT_JSON:
-        return json.dumps(results), False
+        return format_json(results), False
     if output_format == FORMAT_CSV:
         return format_csv(results), True
     return format_table(unit, value, results), False
