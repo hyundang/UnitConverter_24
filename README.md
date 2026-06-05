@@ -35,33 +35,84 @@ venv\Scripts\activate
 # 가상환경 활성화 (macOS/Linux)
 source venv/bin/activate
 
-# 실행
-python src/cli.py
-
 # 가상환경 비활성화
 deactivate
 ```
 
+프로젝트 **루트 디렉터리**에서 아래처럼 실행합니다. 입력은 **표준 입력(stdin)** 으로 전달합니다.
+
+### 사용 방법
+
+#### 1. 단위 변환 (기본)
+
+입력 형식: `단위:숫자`
+
+```bash
+# Windows (PowerShell)
+"meter:2.5" | python src/cli.py
+
+# macOS / Linux
+echo "meter:2.5" | python src/cli.py
+```
+
+출력 예 (기본 표 형식):
+
+```text
++-------+-------+--------+
+| unit  | input | value  |
++-------+-------+--------+
+| meter |   2.5 |    2.5 |
+| feet  |   2.5 | 8.2021 |
+| yard  |   2.5 | 2.7340 |
++-------+-------+--------+
+```
+
+- `unit`: 변환 대상 단위
+- `input`: 입력한 숫자 (모든 행에 동일)
+- `value`: 해당 단위로 변환한 결과
+
+기본 지원 단위: `meter`, `feet`, `yard` (`config/units.json`에서 관리)
+
+#### 2. 출력 형식 선택
+
+`--format` 옵션으로 출력 형태를 바꿀 수 있습니다.
+
+| 옵션 | 설명 |
+|------|------|
+| `table` | 격자 표 형식 (기본값, `unit` / `input` / `value`) |
+| `json` | JSON 객체 |
+| `csv` | CSV |
+
+```bash
+"meter:2.5" | python src/cli.py --format json
+"meter:2.5" | python src/cli.py --format csv
+```
+
+#### 3. 새 단위 등록 (런타임)
+
+등록 형식: `1 단위명 = 비율 meter`
+
+여러 줄을 입력할 수 있습니다. 등록 줄(`=`)은 단위를 추가하고, 변환 줄(`:`)은 변환을 수행합니다.
+
+```bash
+# Windows (PowerShell)
+@"
+1 cubit = 0.4572 meter
+cubit:2
+"@ | python src/cli.py
+```
+
+#### 4. 오류 입력
+
+잘못된 입력 시 stderr에 원인 메시지가 출력되고 종료 코드는 `1`입니다.
+
+| 입력 예 | 메시지 |
+|---------|--------|
+| `meter` | `Invalid format. Expected unit:value` |
+| `meter:abc` | `Invalid number: abc` |
+| `inch:1` | `unknown unit: inch. Supported units: ...` |
+
 ### 기본 요구사항
-1. 사용자 입력 예시:
-   ```
-   meter:2.5
-   ```
-   → 출력:
-   ```
-   2.5 meter = 8.2 feet
-   2.5 meter = 2.7 yard
-   ...
-   ```
-
-2. 현재 지원 단위:
-   - meter
-   - feet
-   - yard
-
-3. 새로운 단위가 추가될 때도 기존 코드의 변경이 최소화되도록 할 것.
-
-4. 각 단위 간 변환이 정확히 계산되도록 테스트 코드를 작성할 것.
 
 ### 비즈니스 로직
 - `1 meter = 3.28084 feet`

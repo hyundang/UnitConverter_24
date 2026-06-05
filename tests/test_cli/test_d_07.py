@@ -7,9 +7,9 @@ import pytest
 
 @pytest.mark.prd_s4
 def test_meter_2_5_outputs_json_with_three_units(
-    run_cli, prd_s2_stdin_input, expected_conversion_values, supported_units
+    run_cli, meter_2_5_stdin, expected_conversion_values, supported_units
 ):
-    result = run_cli(["--format", "json"], prd_s2_stdin_input)
+    result = run_cli(["--format", "json"], meter_2_5_stdin)
 
     assert result.returncode == 0, result.stderr
 
