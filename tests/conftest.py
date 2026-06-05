@@ -12,20 +12,30 @@ from tests import inputs
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
+def _expected_conversion_values(
+    source_unit: str, value: float, meters_per_unit: float
+) -> dict[str, float]:
+    value_in_meters = value * meters_per_unit
+    results = {source_unit: value}
+    if source_unit != "meter":
+        results["meter"] = value_in_meters
+    if source_unit != "feet":
+        results["feet"] = value_in_meters * inputs.METER_TO_FEET
+    if source_unit != "yard":
+        results["yard"] = value_in_meters * inputs.METER_TO_YARD
+    return results
+
+
 @pytest.fixture
 def supported_units():
     return list(inputs.SUPPORTED_UNITS)
 
 
 @pytest.fixture
-def default_registry():
-    from domain.registry import UnitRegistry
+def default_registry(units_config_path):
+    from infrastructure.config_loader import load_registry
 
-    registry = UnitRegistry()
-    registry.register("meter", meters_per_unit=1.0)
-    registry.register("feet", meters_per_unit=1.0 / inputs.METER_TO_FEET)
-    registry.register("yard", meters_per_unit=1.0 / inputs.METER_TO_YARD)
-    return registry
+    return load_registry(units_config_path)
 
 
 @pytest.fixture
@@ -60,12 +70,11 @@ def prd_s2_stdin_input():
 
 @pytest.fixture
 def expected_conversion_values():
-    value = inputs.PRD_S2_VALUE
-    return {
-        "meter": value,
-        "feet": value * inputs.METER_TO_FEET,
-        "yard": value * inputs.METER_TO_YARD,
-    }
+    return _expected_conversion_values(
+        inputs.PRD_S2_UNIT,
+        inputs.PRD_S2_VALUE,
+        meters_per_unit=1.0,
+    )
 
 
 @pytest.fixture
@@ -141,14 +150,11 @@ def prd_fr5_input():
 
 @pytest.fixture
 def expected_cubit_conversion_values():
-    value = inputs.PRD_FR5_VALUE
-    meters = value * inputs.CUBIT_METERS_PER_UNIT
-    return {
-        "cubit": value,
-        "meter": meters,
-        "feet": meters * inputs.METER_TO_FEET,
-        "yard": meters * inputs.METER_TO_YARD,
-    }
+    return _expected_conversion_values(
+        inputs.PRD_FR5_UNIT,
+        inputs.PRD_FR5_VALUE,
+        inputs.CUBIT_METERS_PER_UNIT,
+    )
 
 
 @pytest.fixture
@@ -167,14 +173,11 @@ def s3_mock_input():
 
 @pytest.fixture
 def expected_fathom_conversion_values():
-    value = inputs.S3_MOCK_VALUE
-    meters = value * inputs.S3_MOCK_METERS_PER_UNIT
-    return {
-        inputs.S3_MOCK_UNIT: value,
-        "meter": meters,
-        "feet": meters * inputs.METER_TO_FEET,
-        "yard": meters * inputs.METER_TO_YARD,
-    }
+    return _expected_conversion_values(
+        inputs.S3_MOCK_UNIT,
+        inputs.S3_MOCK_VALUE,
+        inputs.S3_MOCK_METERS_PER_UNIT,
+    )
 
 
 @pytest.fixture
@@ -189,11 +192,8 @@ def prd_u03_stdin():
 
 @pytest.fixture
 def expected_cubit_2_conversion_values():
-    value = inputs.PRD_U03_VALUE
-    meters = value * inputs.CUBIT_METERS_PER_UNIT
-    return {
-        "cubit": value,
-        "meter": meters,
-        "feet": meters * inputs.METER_TO_FEET,
-        "yard": meters * inputs.METER_TO_YARD,
-    }
+    return _expected_conversion_values(
+        inputs.PRD_FR5_UNIT,
+        inputs.PRD_U03_VALUE,
+        inputs.CUBIT_METERS_PER_UNIT,
+    )
