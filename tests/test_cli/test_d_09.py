@@ -15,7 +15,7 @@ def test_meter_2_5_outputs_default_table_lines(
     assert len(lines) == 3
 
     for unit in supported_units:
-        matching = [line for line in lines if unit in line]
+        matching = [line for line in lines if line.rstrip().endswith(unit)]
         assert len(matching) == 1
         assert "meter" in matching[0]
         assert "=" in matching[0]
