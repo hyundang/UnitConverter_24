@@ -58,10 +58,18 @@ echo "meter:2.5" | python src/cli.py
 출력 예 (기본 표 형식):
 
 ```text
-2.5 meter = 2.5000 meter
-2.5 meter = 8.2021 feet
-2.5 meter = 2.7340 yard
++-------+-------+--------+
+| unit  | input | value  |
++-------+-------+--------+
+| meter |   2.5 |    2.5 |
+| feet  |   2.5 | 8.2021 |
+| yard  |   2.5 | 2.7340 |
++-------+-------+--------+
 ```
+
+- `unit`: 변환 대상 단위
+- `input`: 입력한 숫자 (모든 행에 동일)
+- `value`: 해당 단위로 변환한 결과
 
 기본 지원 단위: `meter`, `feet`, `yard` (`config/units.json`에서 관리)
 
@@ -71,7 +79,7 @@ echo "meter:2.5" | python src/cli.py
 
 | 옵션 | 설명 |
 |------|------|
-| `table` | 표 형식 (기본값) |
+| `table` | 격자 표 형식 (기본값, `unit` / `input` / `value`) |
 | `json` | JSON 객체 |
 | `csv` | CSV |
 

@@ -2,6 +2,9 @@
 
 import pytest
 
+from tests import inputs
+from tests.conftest import assert_default_table_output
+
 
 @pytest.mark.prd_s4
 def test_cli_registers_cubit_then_converts(
@@ -9,10 +12,6 @@ def test_cli_registers_cubit_then_converts(
 ):
     result = run_cli([], prd_u03_stdin)
 
-    assert result.returncode == 0, result.stderr
-
-    output_lower = result.stdout.lower()
-    assert "cubit" in output_lower
-
-    for unit, expected in expected_cubit_2_conversion_values.items():
-        assert f"{expected:.4f}" in result.stdout
+    assert_default_table_output(
+        result, expected_cubit_2_conversion_values, inputs.PRD_U03_VALUE
+    )

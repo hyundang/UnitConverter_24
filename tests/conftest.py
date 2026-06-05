@@ -1,6 +1,7 @@
 """Shared pytest fixtures for UnitConverter_24 Test Loop."""
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -8,6 +9,11 @@ from pathlib import Path
 import pytest
 
 from tests import inputs
+
+TABLE_HEADERS = ("unit", "input", "value")
+INPUT_NUMERIC = re.compile(r"^\d+(\.\d+)?$")
+GRID_TABLE_BORDER = "+-------+-------+--------+"
+GRID_TABLE_HEADER = "| unit  | input | value  |"
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -94,21 +100,71 @@ def run_cli(cli_command):
     return _run
 
 
-def assert_default_table_output(result, expected_conversion_values, supported_units):
+def _is_table_border_line(line: str) -> bool:
+    stripped = line.strip()
+    return bool(stripped) and set(stripped) <= {"+", "-", "|", " "}
+
+
+def _is_table_header_line(line: str) -> bool:
+    lower = line.lower()
+    return all(header in lower for header in TABLE_HEADERS)
+
+
+def _assert_grid_table_structure(stdout: str) -> None:
+    lines = stdout.splitlines()
+    assert len(lines) >= 4, f"expected bordered grid table, got {len(lines)} lines"
+    assert lines[0] == GRID_TABLE_BORDER
+    assert lines[1] == GRID_TABLE_HEADER
+    assert lines[2] == GRID_TABLE_BORDER
+    assert lines[-1] == GRID_TABLE_BORDER
+    for line in lines[3:-1]:
+        assert line.startswith("|") and line.endswith("|"), (
+            f"expected data row with pipe borders: {line!r}"
+        )
+
+
+def _parse_table_data_rows(stdout: str) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
+    for line in stdout.splitlines():
+        stripped = line.strip()
+        if not stripped or _is_table_border_line(stripped) or _is_table_header_line(stripped):
+            continue
+        if "|" not in stripped:
+            continue
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if len(cells) == 3 and cells[0] and INPUT_NUMERIC.match(cells[1]):
+            rows.append({"unit": cells[0], "input": cells[1], "value": cells[2]})
+    return rows
+
+
+def assert_default_table_output(result, expected_conversion_values, source_value):
     assert result.returncode == 0, result.stderr
 
-    lines = [line for line in result.stdout.strip().splitlines() if line.strip()]
-    assert len(lines) == 3
+    _assert_grid_table_structure(result.stdout)
 
-    for unit in supported_units:
-        matching = [line for line in lines if line.rstrip().endswith(unit)]
-        assert len(matching) == 1
-        assert "meter" in matching[0]
-        assert "=" in matching[0]
+    stdout_lower = result.stdout.lower()
+    for header in TABLE_HEADERS:
+        assert header in stdout_lower, f"missing table header: {header}"
 
-    assert f"{expected_conversion_values['feet']:.4f}" in result.stdout
-    assert f"{expected_conversion_values['yard']:.4f}" in result.stdout
-    assert f"{expected_conversion_values['meter']:.1f}" in result.stdout
+    rows = _parse_table_data_rows(result.stdout)
+    assert len(rows) == len(expected_conversion_values), (
+        f"expected {len(expected_conversion_values)} data rows, got {len(rows)}"
+    )
+
+    by_unit = {row["unit"]: row for row in rows}
+    for unit, expected in expected_conversion_values.items():
+        assert unit in by_unit, f"missing row for unit: {unit}"
+        row = by_unit[unit]
+
+        assert INPUT_NUMERIC.match(row["input"]), (
+            f"input must be numeric only: {row['input']!r}"
+        )
+        assert float(row["input"]) == pytest.approx(source_value)
+
+        assert INPUT_NUMERIC.match(row["value"]), (
+            f"value must be numeric only: {row['value']!r}"
+        )
+        assert float(row["value"]) == pytest.approx(expected, rel=1e-4)
 
 
 @pytest.fixture

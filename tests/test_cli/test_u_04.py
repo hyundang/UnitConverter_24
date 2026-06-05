@@ -4,6 +4,9 @@ import json
 
 import pytest
 
+from tests import inputs
+from tests.conftest import assert_default_table_output
+
 
 @pytest.mark.prd_s4
 def test_cli_three_formats_share_same_conversion_values(
@@ -17,11 +20,14 @@ def test_cli_three_formats_share_same_conversion_values(
     assert json_result.returncode == 0, json_result.stderr
     assert csv_result.returncode == 0, csv_result.stderr
 
+    assert_default_table_output(
+        table_result, expected_conversion_values, inputs.PRD_S2_VALUE
+    )
+
     data = json.loads(json_result.stdout)
     for unit in supported_units:
         assert unit in data
         assert data[unit] == pytest.approx(expected_conversion_values[unit])
 
     for unit, expected in expected_conversion_values.items():
-        assert f"{expected:.4f}" in table_result.stdout
         assert f"{expected:.4f}" in csv_result.stdout
