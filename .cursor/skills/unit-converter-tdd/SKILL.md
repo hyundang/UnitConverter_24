@@ -8,7 +8,7 @@ description: >-
 
 # UnitConverter_24 — Dual-Track TDD Skill
 
-`.cursorrules`, `docs/PRD.md` v0.2.1, `README.md`와 함께 사용한다. 테스트 ID는 [reference.md](reference.md).
+`.cursorrules`, `docs/PRD.md` v0.2.2, `README.md`와 함께 사용한다. 테스트 ID는 [reference.md](reference.md).
 
 ## 언제 이 Skill을 켜는지
 
@@ -30,12 +30,12 @@ description: >-
 | 구분 | Logic Track | UI Track |
 |------|-------------|----------|
 | **목적** | 규칙·변환·SSOT·유스케이스 | 진입·I/O·포맷·메시지 표면 |
-| **코드** | `src/domain/`, `src/infrastructure/`, `src/application/` | `src/cli.py`, `application/formatting/` (FR-4) |
+| **코드** | `src/application/`(**파싱**·use_cases), `src/domain/`(검증·변환), `src/infrastructure/` | `src/cli.py`, `application/formatting/` (FR-4) |
 | **SSOT** | `config/units.json` + registry (R2) | SSOT 읽기만; 계수 정의 금지 |
-| **테스트** | `tests/domain/`, `tests/infrastructure/`, `tests/application/` | `tests/test_cli.py` |
+| **테스트** | `tests/application/`(파싱·S1 형식/숫자), `tests/domain/`, `tests/infrastructure/` | `tests/test_cli.py` |
 | **PRD** | S1, S2, S3, FR-5, FR-6 | S1 메시지 노출, FR-4, §9.1 시나리오 |
-| **의존** | domain ← infrastructure | cli → application → domain |
-| **금지** | `print`/`input` in domain | `if unit ==`·`3.28084` 리터럴 in cli |
+| **의존** | application(parse) → domain; infrastructure → domain | cli → application → domain |
+| **금지** | `print`/`input` in domain; **domain에 파싱 로직** | `if unit ==`·`3.28084` 리터럴 in cli |
 
 **Dual-Track 규칙:** Logic Track TC가 green이기 전에 UI Track에서 변환 로직을 새로 쓰지 않는다. UI는 application API를 호출만 한다.
 
@@ -57,7 +57,7 @@ description: >-
 
 1. **선언:** `Phase: GREEN` · Track · Layer · `D-*` / `U-*`.
 2. **최소 구현:** 방금 RED에서 실패한 assert만 통과시키는 코드만 추가.
-3. **레이어 준수:** Logic — domain/infrastructure/application; UI — cli는 orchestration·print만.
+3. **레이어 준수:** Logic — application(파싱)·domain(검증·변환)·infrastructure; UI — cli는 orchestration·print만.
 4. **실행:** Track scoped pytest → **해당 테스트 green**; 이어서 **회귀** (`tests/domain/` 또는 전체 `pytest`).
 5. **OCP 점검:** 단위 추가가 `main()` 분기·다중 리터럴 없이 registry/설정만으로 가능한지.
 6. **skip 금지:** Harness 잔여 skip이 있으면 이번 GREEN 범위에서 제거했는지 확인.
