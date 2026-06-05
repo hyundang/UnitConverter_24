@@ -9,7 +9,7 @@ from pathlib import Path
 
 from application.parsing import (
     REGISTER_EQUALS,
-    UNIT_VALUE_SEPARATOR,
+    FormatError,
     parse_unit_value,
 )
 from application.use_cases import register_unit_from_string
@@ -73,14 +73,18 @@ def main(argv: list[str] | None = None) -> int:
     results: dict[str, float] | None = None
 
     for line in lines:
-        if UNIT_VALUE_SEPARATOR in line:
-            unit, value = parse_unit_value(line)
-            validate_unit(unit, registry)
-            results = convert_all(value, unit, registry)
-        elif REGISTER_EQUALS in line:
+        if REGISTER_EQUALS in line:
             register_unit_from_string(registry, line)
-        else:
+            continue
+
+        try:
+            unit, value = parse_unit_value(line)
+        except FormatError as exc:
+            print(exc, file=sys.stderr)
             return 1
+
+        validate_unit(unit, registry)
+        results = convert_all(value, unit, registry)
 
     if results is None or unit is None or value is None:
         return 1
