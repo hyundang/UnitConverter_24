@@ -2,7 +2,7 @@
 
 | 항목 | 내용 |
 |------|------|
-| 버전 | 0.2 |
+| 버전 | 0.2.1 |
 | 프로젝트 | UnitConverter_24 |
 | 작성 일자 | 2026-06-05 |
 | 문제 정의 | `report/01.UnitConvertor_ProblemDefinition_Report.md` |
@@ -24,7 +24,7 @@ CLI에서 `unit:value` 형식으로 길이를 입력하면, 지원 단위로 환
 
 | 항목 | 내용 |
 |------|------|
-| **Role** | `UnitConverter.py`를 실행·수정하는 학습자 |
+| **Role** | `src/cli.py` 및 `src/` 레이어를 실행·수정하는 학습자 |
 | **Goal** | 지원 단위 변환 성공, 실패 시 이유 즉시 파악, 단위 추가 시 수정 위치 혼란 최소화 |
 
 ---
@@ -222,7 +222,7 @@ Red (4 TC 기본) → Green (registry·설정 SSOT) → Refactor (단위 1개 mo
 
 ### 9.1 Happy path
 
-1. 사용자가 `python UnitConverter.py` 실행
+1. 사용자가 `python src/cli.py` 실행
 2. `meter:2.5` 입력
 3. meter·feet·yard 변환 줄 출력
 
@@ -266,10 +266,26 @@ Red (4 TC 기본) → Green (registry·설정 SSOT) → Refactor (단위 1개 mo
 
 ## 10. 의존성 및 참조
 
+### 10.1 프로젝트 구조 (레이어)
+
+```text
+config/units.json
+src/cli.py              # CLI 진입 (I/O·옵션)
+src/domain/             # 파싱·검증·변환·registry
+src/infrastructure/     # 설정 로드 → domain
+src/application/        # use_cases (시나리오)
+tests/domain|application|infrastructure/
+```
+
+의존: `cli` → `application` → `domain` · `infrastructure` → `domain`.
+
+### 10.2 참조 문서
+
 | 자료 | 용도 |
 |------|------|
 | `README.md` | 기본·품질·추가 요구사항, 비율, 실행 방법 |
-| `UnitConverter.py` | 현행 baseline |
+| `src/cli.py` | CLI 진입점 (구 `UnitConverter.py` 대체) |
+| `config/units.json` | 단위·비율 SSOT (FR-6) |
 | `report/01_UnitConvertor_MomTest_report.md` | Pain 분석 |
 | `report/01.UnitConvertor_ProblemDefinition_Report.md` | 문제·8계층 정의 |
 
@@ -307,3 +323,4 @@ Red (4 TC 기본) → Green (registry·설정 SSOT) → Refactor (단위 1개 mo
 |------|------|------|
 | 0.1 | 2026-06-05 | Mom Test 기반 초안 — 문제 정의, R-G-I-O, S1~S3, Rule/Command/Test Loop, 범위 |
 | 0.2 | 2026-06-05 | README 추가 요구 3종 In Scope(IS-7~9): OS-1~3 제거, FR-4~6·S4·§8.2·§9.5~9.7·M4 반영 |
+| 0.2.1 | 2026-06-05 | 레이어 구조: `src/{cli,domain,infrastructure,application}`, `config/units.json`, tests 하위 분리 |

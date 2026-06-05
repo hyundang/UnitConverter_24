@@ -1,7 +1,7 @@
 # UnitConverter_24 — Cursor Rules (초안)
 
 ## 도메인
-- 길이 단위 변환 **CLI** (`UnitConverter.py` 진입점).
+- 길이 단위 변환 **CLI** (`src/cli.py` 진입점, `python src/cli.py`).
 - **입력**: 한 줄 `unit:value` (예: `meter:2.5`). 콜론 1개, 값은 숫자.
 - **성공 출력**: 등록된 **모든** 단위마다 한 줄 — `"{value} {source_unit} = {converted} {target_unit}"` (예: `2.5 meter = 8.2021 feet`).
 - **실패 출력**: 형식 오류 / 숫자 오류 / unknown unit — 원인별 메시지와 허용 형식·지원 단위 힌트.
@@ -9,7 +9,7 @@
 
 ## 설계 원칙
 - OCP: 단위 추가 시 기존 변환·출력 로직 수정 최소화.
-- SRP: 파싱·검증·변환·출력·CLI는 역할별로 분리.
+- SRP: `src/domain` · `src/infrastructure` · `src/application` · `src/cli.py` 역할 분리.
 - 단위 추가 시 변경 diff는 **registry(또는 동일 SSOT) 1파일** + TC 1건(또는 기대값 확장)을 원칙으로 한다.
 - 참고: `docs/PRD.md`, `README.md`, `report/01.UnitConvertor_ProblemDefinition_Report.md`.
 
@@ -29,7 +29,7 @@
 ## TDD 시 AI 선언 (매 응답·작업 단위)
 작업 시작 시 한 줄로 명시:
 - **Phase**: RED | GREEN | REFACTOR
-- **Layer**: Rule | Command | Test Loop | (구현 시) Domain/CLI
+- **Layer**: Rule | Command | Test Loop | domain | infrastructure | application | cli
 - **Track**: 예) `S1-validation` | `S2-conversion` | `S3-registry`
 
 ## AI 행동
