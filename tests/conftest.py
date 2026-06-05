@@ -64,8 +64,8 @@ def cli_command():
 
 
 @pytest.fixture
-def prd_s2_stdin_input():
-    return inputs.PRD_S4_INPUT
+def meter_2_5_stdin():
+    return inputs.PRD_S2_INPUT
 
 
 @pytest.fixture

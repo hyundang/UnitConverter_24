@@ -18,6 +18,17 @@ FORMAT_CSV = "csv"
 FORMAT_TABLE = "table"
 
 
+def _render_output(
+    output_format: str, unit: str, value: float, results: dict[str, float]
+) -> tuple[str, bool]:
+    """Return rendered stdout and whether print should use end=''."""
+    if output_format == FORMAT_JSON:
+        return json.dumps(results), False
+    if output_format == FORMAT_CSV:
+        return format_csv(results), True
+    return format_table(unit, value, results), False
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--format", default="table")
@@ -40,12 +51,10 @@ def main(argv: list[str] | None = None) -> int:
 
     unit, value, results = processed
 
-    if args.format == FORMAT_JSON:
-        print(json.dumps(results))
-    elif args.format == FORMAT_CSV:
-        print(format_csv(results), end="")
-    else:
-        print(format_table(unit, value, results))
+    output, suppress_trailing_newline = _render_output(
+        args.format, unit, value, results
+    )
+    print(output, end="" if suppress_trailing_newline else "\n")
     return 0
 
 

@@ -13,6 +13,11 @@ class NumberError(ValueError):
     """Raised when the value token is not numeric."""
 
 
+def _unit_value_format_error() -> FormatError:
+    expected = UNIT_VALUE_SEPARATOR.join(("unit", "value"))
+    return FormatError(f"Invalid format. Expected {expected}")
+
+
 def _registration_format_error() -> FormatError:
     return FormatError(f"Invalid format. Expected 1 unit = ratio {REFERENCE_UNIT}")
 
@@ -33,15 +38,11 @@ def _parse_meters_quantity_token(meters_side: str) -> str:
 
 def parse_unit_value(text: str) -> tuple[str, float]:
     if UNIT_VALUE_SEPARATOR not in text:
-        raise FormatError(
-            f"Invalid format. Expected {UNIT_VALUE_SEPARATOR.join(('unit', 'value'))}"
-        )
+        raise _unit_value_format_error()
 
     unit, value_token = text.split(UNIT_VALUE_SEPARATOR, 1)
     if not unit or not value_token:
-        raise FormatError(
-            f"Invalid format. Expected {UNIT_VALUE_SEPARATOR.join(('unit', 'value'))}"
-        )
+        raise _unit_value_format_error()
 
     try:
         value = float(value_token)
