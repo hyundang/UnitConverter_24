@@ -1,0 +1,46 @@
+# UnitConverter_24 — Cursor Rules (초안)
+
+## 도메인
+- 길이 단위 변환 **CLI** (`src/cli.py` 진입점, `python src/cli.py`).
+- **입력**: 한 줄 `unit:value` (예: `meter:2.5`). 콜론 1개, 값은 숫자.
+- **성공 출력**: 등록된 **모든** 단위마다 한 줄 — `"{value} {source_unit} = {converted} {target_unit}"` (예: `2.5 meter = 8.2021 feet`).
+- **실패 출력**: 형식 오류 / 숫자 오류 / unknown unit — 원인별 메시지와 허용 형식·지원 단위 힌트.
+- 기준 단위는 **meter**; feet·yard 비율은 meter 기준으로 파생. 단위·계수는 **registry 또는 설정 1곳(SSOT)** 에만 둔다.
+
+## 설계 원칙
+- OCP: 단위 추가 시 기존 변환·출력 로직 수정 최소화.
+- SRP: `src/domain` · `src/infrastructure` · `src/application` · `src/cli.py` 역할 분리.
+- 단위 추가 시 변경 diff는 **registry(또는 동일 SSOT) 1파일** + TC 1건(또는 기대값 확장)을 원칙으로 한다.
+- 참고: `docs/PRD.md`, `README.md`, `report/01.UnitConvertor_ProblemDefinition_Report.md`.
+
+## MagicConstant / SSOT
+- 변환 계수·지원 단위 목록·기본 포맷 문자열을 코드 여러 곳에 **리터럴로 산재 금지**.
+- `3.28084`, `1.09361` 등 비율은 **단일 registry/상수 모듈/설정**에서만 정의하고 import·주입한다.
+- 테스트·프로덕션은 동일 SSOT를 참조한다 (테스트 전용 중복 상수 금지).
+
+## TDD (Test Loop)
+- 순서: **RED → GREEN → REFACTOR**만 허용. Phase를 바꿀 때마다 선언한다.
+- **금지**: assert 완화, `@pytest.mark.skip`, `xfail`, `pass`로 녹색 우회, 미구현 테스트 방치.
+- RED: 실패하는 테스트를 먼저 작성·실행한다 (`tests/`, PRD §8.1 매트릭스: 형식·unknown·숫자·정상 변환).
+- GREEN: 테스트를 통과하는 **최소** 구현만 한다.
+- REFACTOR: green 유지하며 구조·SSOT·SRP 정리; 동작 변경 시 TC 먼저.
+- 실행: `pytest` (설정: `pytest.ini`, dev: `requirements-dev.txt`).
+
+## TDD 시 AI 선언 (매 응답·작업 단위)
+작업 시작 시 한 줄로 명시:
+- **Phase**: RED | GREEN | REFACTOR
+- **Layer**: Rule | Command | Test Loop | domain | infrastructure | application | cli
+- **Track**: 예) `S1-validation` | `S2-conversion` | `S3-registry`
+
+## AI 행동
+- 사용자 대화·설명·주석·커밋 메시지 제안: **한국어**.
+- 변경 범위는 요청·Phase에 맞게 **최소 diff**; 무관한 리팩터·문서·의존성 추가 금지.
+- **git commit / push / PR** 은 사용자가 명시적으로 요청할 때만 수행한다.
+- 구현 전: 기존 코드·`tests/`·PRD 성공 기준(S1~S3)을 확인한다.
+- 완료 시: 실행한 명령, pytest 결과(통과/실패 수), 남은 RED 항목을 짧게 보고한다.
+
+## 금지·주의
+- README **추가 요구**(FR-4~6, IS-7~9)는 PRD **M2(S1~S3) 완료 후 M4** 순서로; 기본 TC·registry SSOT 없이 포맷·동적 등록만 먼저 구현하지 않는다.
+- 에러 메시지만 고치고 registry·TC를 비우지 않는다.
+- Harness 단계에서 skip으로 green을 만든 상태를 유지·확장하지 않는다.
+- PRD **OS-4·OS-5·OS-6**(GUI, Mom Test 미확인 지표, 운영 배포)은 구현하지 않는다.

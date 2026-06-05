@@ -6,6 +6,23 @@
 - 새로운 단위를 추가할 때 기존 코드의 변경이 최소화되도록 설계한다.
 - 각 단위 변환 로직은 테스트 코드로 검증한다.
 
+### 프로젝트 구조
+```text
+config/
+  units.json               # 단위·비율 SSOT (FR-6)
+src/
+  cli.py                   # CLI 진입점 (README 실행)
+  domain/                  # 파싱·검증·변환·registry
+  infrastructure/          # config/units.json 로드
+  application/
+    use_cases.py           # 유스케이스 오케스트레이션
+tests/
+  test_cli.py
+  domain/                  # S1·S2 TC
+  application/
+  infrastructure/
+```
+
 ### 가상환경 설정 및 실행
 ```bash
 # 가상환경 생성
@@ -18,7 +35,7 @@ venv\Scripts\activate
 source venv/bin/activate
 
 # 실행
-python UnitConverter.py
+python src/cli.py
 
 # 가상환경 비활성화
 deactivate
