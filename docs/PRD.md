@@ -2,7 +2,7 @@
 
 | 항목 | 내용 |
 |------|------|
-| 버전 | 0.2.1 |
+| 버전 | 0.2.2 |
 | 프로젝트 | UnitConverter_24 |
 | 작성 일자 | 2026-06-05 |
 | 문제 정의 | `report/01.UnitConvertor_ProblemDefinition_Report.md` |
@@ -71,7 +71,7 @@ CLI에서 `unit:value` 형식으로 길이를 입력하면, 지원 단위로 환
 
 | ID | 내용 | README 근거 |
 |----|------|-------------|
-| IS-1 | `unit:value` 파싱 및 검증 (형식·숫자·단위) | 기본 요구사항 |
+| IS-1 | `unit:value` **파싱(application)** 및 **검증(domain)** (형식·숫자·단위) | 기본 요구사항 · §5.0 |
 | IS-2 | meter, feet, yard 변환 및 CLI 출력 | 기본·비즈니스 로직 |
 | IS-3 | 단위·계수 **단일 출처** (registry; 설정 파일과 동일 SSOT) | 품질·OCP |
 | IS-4 | 변환·검증 **단위 테스트** (Test Loop) | 기본 요구사항 §4 |
@@ -95,14 +95,26 @@ CLI에서 `unit:value` 형식으로 길이를 입력하면, 지원 단위로 환
 
 ## 5. 기능 요구사항 (Functional Requirements)
 
+### 5.0 레이어별 책임 (SRP)
+
+| 레이어 | 책임 | 비고 |
+|--------|------|------|
+| **application** | 입력 문자열 **파싱** (`unit:value`, FR-5 등록 문법), 유스케이스 조립·오케스트레이션 | `parsing.py` 또는 `use_cases.py` 내 파싱 모듈 |
+| **domain** | **검증**(미등록 단위·음수 등 비즈니스 규칙), **변환**, registry 모델 | 파싱 결과(단위명·숫자)를 입력으로 받음 |
+| **infrastructure** | `config/units.json` 로드 → domain registry | |
+| **cli** | stdin/argv·`print`·exit code | 파싱·변환 로직 없음 |
+
+**흐름:** `cli` → `application`(parse) → `domain`(validate · convert) · `infrastructure`(load).
+
 ### FR-1 입력 검증 (S1)
 
-| ID | 요구 | 수용 기준 |
-|----|------|-----------|
-| FR-1.1 | `:` 없는 입력 거부 | `Invalid format`류 메시지 + `unit:value` 예시 |
-| FR-1.2 | 비숫자 `value` 거부 | 숫자 오류 메시지에 잘못된 토큰 표시 |
-| FR-1.3 | 미등록 `unit` 거부 | `Unknown unit` + **지원 단위 목록** 힌트 |
-| FR-1.4 | (권장) 음수 값 정책 | README 품질 요구: 음수 검증 — 메시지 또는 거부 명시 |
+| ID | 요구 | 수용 기준 | 레이어 |
+|----|------|-----------|--------|
+| FR-1.0 | `unit:value` **파싱** | 단위 토큰·값 토큰 분리; `float` 변환 시도 | **application** |
+| FR-1.1 | `:` 없는 입력 거부 | `Invalid format`류 메시지 + `unit:value` 예시 | application (파싱 실패) |
+| FR-1.2 | 비숫자 `value` 거부 | 숫자 오류 메시지에 잘못된 토큰 표시 | application (파싱 실패) |
+| FR-1.3 | 미등록 `unit` 거부 | `Unknown unit` + **지원 단위 목록** 힌트 | **domain** (검증) |
+| FR-1.4 | (권장) 음수 값 정책 | README 품질 요구: 음수 검증 — 메시지 또는 거부 명시 | domain (검증) |
 
 ### FR-2 변환 (S2)
 
@@ -133,7 +145,7 @@ CLI에서 `unit:value` 형식으로 길이를 입력하면, 지원 단위로 환
 
 | ID | 요구 | 수용 기준 |
 |----|------|-----------|
-| FR-5.1 | 등록 입력 파싱 | `1 {unit} = {ratio} meter` 형태(README 예: `1 cubit = 0.4572 meter`) |
+| FR-5.1 | 등록 입력 파싱 | `1 {unit} = {ratio} meter` 형태(README 예: `1 cubit = 0.4572 meter`) — **application** |
 | FR-5.2 | 등록 후 변환 | 등록 직후(또는 동일 세션) `cubit:1` 등으로 변환·출력 가능 |
 | FR-5.3 | SSOT 반영 | 등록 내용이 registry/설정 단일 출처에만 추가 (Rule R2·R3) |
 | FR-5.4 | 등록 실패 처리 | 형식·숫자·중복 단위 등 구분 메시지 (S1 정합) |
@@ -154,7 +166,7 @@ CLI에서 `unit:value` 형식으로 길이를 입력하면, 지원 단위로 환
 | ID | 요구 | 수용 기준 |
 |----|------|-----------|
 | NFR-1 | Test Loop | 최소 4 TC: 형식 오류, unknown unit, 숫자 오류, 정상 변환 |
-| NFR-2 | SRP | parse / convert / print 책임 분리 |
+| NFR-2 | SRP | **application** parse · **domain** convert/validate · **cli** print — §5.0 |
 | NFR-3 | Discoverability | 지원 단위·입력 형식을 README + 실패 메시지 + (가능 시) `--help`에서 동일하게 안내 |
 | NFR-4 | 변경 최소화 | README: 새 단위 추가 시 기존 코드 변경 최소화 |
 | NFR-5 | 포맷 일관성 | 표/JSON/CSV가 **동일 변환 결과**를 표현 (값만 직렬화 차이) |
@@ -176,7 +188,7 @@ CLI에서 `unit:value` 형식으로 길이를 입력하면, 지원 단위로 환
 
 ### 7.2 Command (요약)
 
-C1 분산 지점 목록 → C2 단일 출처 → C3 `main()` 슬림화 → C4 TC 선작성 → C5 green + 1파일 diff 검증 → **C6** README 추가(FR-4~6) TC 선행·구현 (M4)
+C1 분산 지점 목록 → C2 단일 출처 → C3 `cli` I/O만 · **application** parse/use case · **domain** validate/convert → C4 TC 선작성 → C5 green + 1파일 diff 검증 → **C6** README 추가(FR-4~6) TC 선행·구현 (M4)
 
 ### 7.3 Test Loop (요약)
 
@@ -270,14 +282,19 @@ Red (4 TC 기본) → Green (registry·설정 SSOT) → Refactor (단위 1개 mo
 
 ```text
 config/units.json
-src/cli.py              # CLI 진입 (I/O·옵션)
-src/domain/             # 파싱·검증·변환·registry
-src/infrastructure/     # 설정 로드 → domain
-src/application/        # use_cases (시나리오)
+src/cli.py                  # CLI 진입 (I/O·옵션)
+src/application/            # 파싱 · use_cases (시나리오)
+  parsing.py                # (권장) unit:value · 등록 문법 파싱
+  use_cases.py
+src/domain/                 # 검증 · 변환 · registry
+src/infrastructure/         # 설정 로드 → domain
 tests/domain|application|infrastructure/
+tests/test_cli.py           # UI Track
 ```
 
-의존: `cli` → `application` → `domain` · `infrastructure` → `domain`.
+의존: `cli` → `application`(parse · orchestrate) → `domain`(validate · convert) · `infrastructure` → `domain`.
+
+**파싱 위치:** `unit:value` 및 동적 등록 문자열 파싱은 **domain이 아닌 application** (§5.0 · FR-1.0 · FR-5.1). S1 TC 중 형식·숫자 오류는 `tests/application/`(또는 domain에 파싱 결과를 넘기는 통합 TC)로 고정 가능.
 
 ### 10.2 참조 문서
 
@@ -324,3 +341,4 @@ tests/domain|application|infrastructure/
 | 0.1 | 2026-06-05 | Mom Test 기반 초안 — 문제 정의, R-G-I-O, S1~S3, Rule/Command/Test Loop, 범위 |
 | 0.2 | 2026-06-05 | README 추가 요구 3종 In Scope(IS-7~9): OS-1~3 제거, FR-4~6·S4·§8.2·§9.5~9.7·M4 반영 |
 | 0.2.1 | 2026-06-05 | 레이어 구조: `src/{cli,domain,infrastructure,application}`, `config/units.json`, tests 하위 분리 |
+| 0.2.2 | 2026-06-05 | 파싱 책임 **application**으로 이동 (§5.0, FR-1.0, §10.1); domain은 검증·변환·registry |

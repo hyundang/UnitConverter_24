@@ -12,14 +12,15 @@ config/
   units.json               # 단위·비율 SSOT (FR-6)
 src/
   cli.py                   # CLI 진입점 (README 실행)
-  domain/                  # 파싱·검증·변환·registry
-  infrastructure/          # config/units.json 로드
   application/
+    parsing.py             # (권장) unit:value · 등록 문법 파싱
     use_cases.py           # 유스케이스 오케스트레이션
+  domain/                  # 검증 · 변환 · registry
+  infrastructure/          # config/units.json 로드
 tests/
   test_cli.py
-  domain/                  # S1·S2 TC
-  application/
+  application/             # 파싱 · use case TC (S1 형식·숫자 등)
+  domain/                  # 검증 · 변환 TC (S1 unknown · S2)
   infrastructure/
 ```
 

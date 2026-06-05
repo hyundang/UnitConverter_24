@@ -12,7 +12,7 @@ UnitConverter_24 **Dual-Track TDD** — **RED 단계만**. GREEN·REFACTOR·`src
 Phase: red | Layer: <domain|infrastructure|application|cli> | Track: <Logic|UI> | ID: <D-** 또는 U-**>
 ```
 
-- **Logic Track:** `tests/domain/`, `tests/infrastructure/`, `tests/application/` — `src/domain` 등 **직접 import**, domain **Mock 금지**
+- **Logic Track:** `tests/application/`(파싱·D-02·D-04·D-06), `tests/domain/`(검증·변환), `tests/infrastructure/` — **domain Mock 금지**; 파싱은 `src/application`만
 - **UI Track:** `tests/test_cli.py` — subprocess `python src/cli.py` 또는 `cli` + `capsys`
 
 ---
@@ -20,7 +20,7 @@ Phase: red | Layer: <domain|infrastructure|application|cli> | Track: <Logic|UI> 
 ## 절차
 
 1. **ID 확인** — `reference.md`에서 이번 사이클 `D-*` / `U-*` 1개(또는 사용자 지정 범위) 선택. PRD §8.1·§8.2와 매핑 확인.
-2. **대상 테스트 파일 확정** — Logic: `tests/domain/test_validation.py` · `test_conversion.py` 등 / UI: `tests/test_cli.py`. **변경은 `tests/` 아래만.**
+2. **대상 테스트 파일 확정** — reference.md **Layer** 열 기준: 파싱 → `tests/application/` · 검증·변환 → `tests/domain/` · UI → `tests/test_cli.py`. **변경은 `tests/`만.**
 3. **AAA 테스트 작성**
    - **Arrange:** `tests/inputs.py`, `conftest` fixture (`prd_inputs`, `supported_units`, `config/units.json` 경로)
    - **Act:** import한 domain/application API 또는 CLI 호출
@@ -75,7 +75,8 @@ pytest -m prd_s2 -x -q
 | 금지 | 이유 |
 |------|------|
 | `src/` 수정 | RED는 테스트만 — GREEN에서 구현 |
-| **Logic Track에서 domain Mock** | domain 규칙은 실제 객체·fixture로 검증 |
+| **Logic Track에서 domain Mock** | domain·application 규칙은 실제 코드로 검증 |
+| **domain에 파싱 로직** | 파싱은 application (PRD §5.0) |
 | assert 완화·삭제 | 요구사항 퇴행 |
 | `@pytest.mark.skip` · `xfail` | `.cursorrules` · Harness 우회 |
 | `tests/` 밖 문서·설정 대량 수정 | RED 범위 이탈 |

@@ -1,0 +1,19 @@
+"""D-07 — PRD FR-4 · §8.2: --format json."""
+
+import json
+
+import pytest
+
+
+@pytest.mark.prd_s4
+def test_meter_2_5_outputs_json_with_three_units(
+    run_cli, prd_s2_stdin_input, expected_conversion_values, supported_units
+):
+    result = run_cli(["--format", "json"], prd_s2_stdin_input)
+
+    assert result.returncode == 0, result.stderr
+
+    data = json.loads(result.stdout)
+    for unit in supported_units:
+        assert unit in data
+        assert data[unit] == pytest.approx(expected_conversion_values[unit])
