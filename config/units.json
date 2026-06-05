@@ -1,1 +1,13 @@
-{}
+{
+  "units": {
+    "meter": {
+      "meters_per_unit": 1.0
+    },
+    "feet": {
+      "meters_per_unit": 0.3047999902464003
+    },
+    "yard": {
+      "meters_per_unit": 0.9144027578387177
+    }
+  }
+}
