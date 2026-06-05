@@ -7,7 +7,12 @@ import json
 import sys
 from pathlib import Path
 
-from application.parsing import parse_unit_value
+from application.parsing import (
+    REGISTER_EQUALS,
+    UNIT_VALUE_SEPARATOR,
+    parse_unit_value,
+)
+from application.use_cases import register_unit_from_string
 from domain.conversion import convert_all
 from domain.validation import validate_unit
 from infrastructure.config_loader import load_registry
@@ -19,7 +24,7 @@ FORMAT_CSV = "csv"
 FORMAT_TABLE = "table"
 CSV_VALUE_DECIMALS = 4
 TABLE_SOURCE_DECIMALS = 1
-TABLE_SAME_UNIT_DECIMALS = 1
+TABLE_SAME_UNIT_DECIMALS = 4
 TABLE_OTHER_UNIT_DECIMALS = 4
 TABLE_EQUALS = "="
 CSV_UNIT_HEADER = "unit"
@@ -60,11 +65,25 @@ def main(argv: list[str] | None = None) -> int:
     if args.format not in (FORMAT_JSON, FORMAT_CSV, FORMAT_TABLE):
         return 1
 
-    line = sys.stdin.read().strip()
     registry = load_registry(UNITS_CONFIG_PATH)
-    unit, value = parse_unit_value(line)
-    validate_unit(unit, registry)
-    results = convert_all(value, unit, registry)
+    lines = [line.strip() for line in sys.stdin.read().splitlines() if line.strip()]
+
+    unit: str | None = None
+    value: float | None = None
+    results: dict[str, float] | None = None
+
+    for line in lines:
+        if UNIT_VALUE_SEPARATOR in line:
+            unit, value = parse_unit_value(line)
+            validate_unit(unit, registry)
+            results = convert_all(value, unit, registry)
+        elif REGISTER_EQUALS in line:
+            register_unit_from_string(registry, line)
+        else:
+            return 1
+
+    if results is None or unit is None or value is None:
+        return 1
 
     if args.format == FORMAT_JSON:
         print(json.dumps(results))
