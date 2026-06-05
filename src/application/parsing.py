@@ -1,7 +1,9 @@
-"""Input string parsing — unit:value format (FR-1.0)."""
+"""Input string parsing — unit:value and unit registration (FR-1.0, FR-5.1)."""
+
+from domain.constants import REFERENCE_UNIT
 
 UNIT_VALUE_SEPARATOR = ":"
-
+REGISTER_EQUALS = "="
 
 class FormatError(ValueError):
     """Raised when input does not match unit:value format."""
@@ -29,3 +31,36 @@ def parse_unit_value(text: str) -> tuple[str, float]:
         raise NumberError(f"Invalid number: {value_token}") from exc
 
     return unit, value
+
+
+def parse_register_unit(text: str) -> tuple[str, float]:
+    if REGISTER_EQUALS not in text:
+        raise FormatError(
+            f"Invalid format. Expected 1 unit = ratio {REFERENCE_UNIT}"
+        )
+
+    quantity_unit, meters_side = text.split(REGISTER_EQUALS, 1)
+    quantity_unit = quantity_unit.strip()
+    meters_side = meters_side.strip()
+
+    quantity_parts = quantity_unit.split(None, 1)
+    if len(quantity_parts) != 2 or not quantity_parts[0] or not quantity_parts[1]:
+        raise FormatError(
+            f"Invalid format. Expected 1 unit = ratio {REFERENCE_UNIT}"
+        )
+
+    meters_parts = meters_side.split()
+    if len(meters_parts) != 2 or meters_parts[1] != REFERENCE_UNIT:
+        raise FormatError(
+            f"Invalid format. Expected 1 unit = ratio {REFERENCE_UNIT}"
+        )
+
+    try:
+        quantity = float(quantity_parts[0])
+        meters_quantity = float(meters_parts[0])
+    except ValueError as exc:
+        raise NumberError(f"Invalid number in registration: {text}") from exc
+
+    unit_name = quantity_parts[1]
+    meters_per_unit = meters_quantity / quantity
+    return unit_name, meters_per_unit
